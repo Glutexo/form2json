@@ -69,3 +69,42 @@ test('One-dimensional hashes are captured', function() {
         }
     });
 });
+
+test('Multi-dimensional hashes are captured', function() {
+    var html = '<form>\n';
+    html += '   <input type="hidden" name="food[fruit][apple]" value="red" />\n'
+    html += '   <input type="hidden" name="food[fruit][pear]" value="yellow" />\n'
+    html += '   <input type="hidden" name="food[vegetable][carrot]" value="orange" />\n'
+    html += '   <input type="hidden" name="food[vegetable][broccoli]" value="green" />\n'
+    html += '   <input type="hidden" name="animal[mammal][rat]" value="brown" />\n'
+    html += '   <input type="hidden" name="animal[mammal][elephant]" value="grey" />\n'
+    html += '   <input type="hidden" name="animal[bird][blackbird]" value="black" />\n'
+    html += '   <input type="hidden" name="animal[bird][dove]" value="white" />\n'
+    html += '</form>\n';
+
+    var $form = $(html);
+    var formData = getFormData($form);
+
+    deepEqual(formData, {
+        food: {
+            fruit: {
+                apple: 'red',
+                pear: 'yellow'
+            },
+            vegetable: {
+                carrot: 'orange',
+                broccoli: 'green'
+            }
+        },
+        animal: {
+            mammal: {
+                rat: 'brown',
+                elephant: 'grey'
+            },
+            bird: {
+                blackbird: 'black',
+                dove: 'white'
+            }
+        }
+    });
+});
