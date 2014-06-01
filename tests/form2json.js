@@ -47,7 +47,7 @@ test('Vars with a same name are overwritten.', function() {
     });
 });
 
-test('One-dimensional arrays are captured', function() {
+test('One-dimensional hashes are captured', function() {
     var html = '<form>\n';
     html += '   <input type="hidden" name="food[fruit]" value="apple" />\n'
     html += '   <input type="hidden" name="food[vegetable]" value="carrot" />\n'
