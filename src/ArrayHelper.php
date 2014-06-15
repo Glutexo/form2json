@@ -6,6 +6,14 @@ class ArrayHelper {
 	 * @return array
 	 */
 	static function StdClassToArrayRecursive(stdClass $std, $integer_keys = true) {
+		// Because of a bug in PHP #66137 (https://bugs.php.net/bug.php?id=66173),
+		// it’s not possible to use the converted array directly. A new array must
+		// be created, because if the stdClass object contains properties with nu-
+		// meric names, in the converted array they would be stored under string
+		// keys with numeric value. But because PHP converts numeric keys from
+		// string to integer/floats instead, those numeric-string-keyed elements
+		// would be inaccessible. It is possible to iterate over such array
+		// though.
 		$converted_array = (array) $std;
 		$new_array = array();
 		foreach($converted_array as $k => $v) {
