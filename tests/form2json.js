@@ -1,7 +1,11 @@
-function create$form() {
+function create$form(formTransform) {
   $form = $(document.createElement('form'));
   $form.attr('action', 'dump.php');
   $form.attr('method', 'POST');
+
+  if(typeof formTransform == 'function') {
+    formTransform($form);
+  }
 
   return $form;
 }
@@ -13,7 +17,224 @@ function create$hidden(name, value) {
   return $input;
 }
 
-module('Submit as JSON.');
+function formAsyncTest(title, expected, formTransform) {
+  test(title + ' (getFormData)', function() {
+    var $form = create$form(formTransform);
+
+    deepEqual(getFormData($form), expected);
+  })
+
+  asyncTest(title + ' (AJAX)', function() {
+    expect(1);
+
+    var $form = create$form(formTransform);
+
+    $.ajax({
+      url: $form.attr('action'),
+      type: $form.attr('method'),
+      data: getFormData($form),
+      success: function(data) {
+        deepEqual(data, expected);
+        start();
+      }
+    });
+  });
+}
+
+module('getPushKey helper');
+
+test('Empty object push key is found', function() {
+  var obj = {};
+  equal(getPushKey(obj), 0);
+});
+
+test('Sequential numeric push key is found', function() {
+  var obj = { 0: 'fruit', 1: 'vegetable' };
+  equal(getPushKey(obj), 2);
+});
+
+test('Non-sequential numeric push key is found', function() {
+  var obj = { 0: 'fruit', 5: 'vegetable', 2: 'nut' };
+  equal(getPushKey(obj), 6);
+});
+
+test('First push key in named object is found', function() {
+  var obj = { fruit: 'apple' };
+  equal(getPushKey(obj), 0);
+});
+
+test('Another push key in named object is found', function() {
+  var obj = { fruit: 'apple', 5: 'vegetable', nut: 'chestnut', 2: 'unknown' };
+  equal(getPushKey(obj), 6);
+});
+
+module('Form submit environment');
+
+formAsyncTest('Empty form is submitted.', {});
+
+formAsyncTest(
+  'Form with single value is submitted.',
+  { fruit: 'apple' },
+  function($form) {
+    $form.append(create$hidden('fruit', 'apple'));
+  }
+);
+
+formAsyncTest(
+  'Form with multiple values is submitted.',
+  { fruit: 'apple', vegetable: 'carrot', nut: 'cashew' },
+  function($form) {
+    $form.append(create$hidden('fruit', 'apple'));
+    $form.append(create$hidden('vegetable', 'carrot'));
+    $form.append(create$hidden('nut', 'cashew'));
+  }
+);
+
+formAsyncTest(
+  'Form with named arrays is submitted.',
+  {
+    fruit: { red: 'apple', orange: 'orange' },
+    vegetables: { orange: 'carrot', green: 'broccoli' }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[red]', 'apple'));
+    $form.append(create$hidden('fruit[orange]', 'orange'));
+    $form.append(create$hidden('vegetables[orange]', 'carrot'));
+    $form.append(create$hidden('vegetables[green]', 'broccoli'));
+  }
+);
+
+formAsyncTest(
+  'Form with numbered arrays is submitted.',
+  {
+    fruit: { 0: 'apple', 2: 'orange' },
+    vegetables: { 1: 'broccoli', 3: 'carrot' }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[0]', 'apple'));
+    $form.append(create$hidden('fruit[2]', 'orange'));
+    $form.append(create$hidden('vegetables[3]', 'carrot'));
+    $form.append(create$hidden('vegetables[1]', 'broccoli'));
+  }
+);
+
+formAsyncTest(
+  'Form with one implicitly numbered array is submitted.',
+  {
+    fruit: { 0: 'apple', 1: 'orange', 2: 'pear' },
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[]', 'apple'));
+    $form.append(create$hidden('fruit[]', 'orange'));
+    $form.append(create$hidden('fruit[]', 'pear'));
+  }
+);
+
+formAsyncTest(
+  'Form with more implicitly numbered arrays is submitted.',
+  {
+    fruit: { 0: 'apple', 1: 'orange' },
+    vegetables: { 0: 'carrot', 1: 'broccoli' },
+    nuts: { 0: 'chestnut', 1: 'walnut' }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[]', 'apple'));
+    $form.append(create$hidden('fruit[]', 'orange'));
+    $form.append(create$hidden('vegetables[]', 'carrot'));
+    $form.append(create$hidden('vegetables[]', 'broccoli'));
+    $form.append(create$hidden('nuts[]', 'chestnut'));
+    $form.append(create$hidden('nuts[]', 'walnut'));
+  }
+);
+
+formAsyncTest(
+  'Form with multi-dimensional named arrays is submitted.',
+  {
+    fruit: {
+      apple: { color: 'red', taste: 'sweet' },
+      lemon: { color: 'yellow', taste: 'sour' }
+    },
+    vegetables: {
+      carrot: { color: 'orange', taste: 'sweet' },
+      broccoli: { color: 'green', taste: 'bitter' }
+    }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[apple][color]', 'red'));
+    $form.append(create$hidden('fruit[apple][taste]', 'sweet'));
+    $form.append(create$hidden('fruit[lemon][color]', 'yellow'));
+    $form.append(create$hidden('fruit[lemon][taste]', 'sour'));
+    $form.append(create$hidden('vegetables[carrot][color]', 'orange'));
+    $form.append(create$hidden('vegetables[carrot][taste]', 'sweet'));
+    $form.append(create$hidden('vegetables[broccoli][color]', 'green'));
+    $form.append(create$hidden('vegetables[broccoli][taste]', 'bitter'));
+  }
+);
+
+
+formAsyncTest(
+  'Form with multi-dimensional mixed arrays is submitted.',
+  {
+    fruit: {
+      apple: {
+        colors: {
+          0: 'red',
+          1: 'green',
+          2: 'yellow'
+        },
+        taste: 'sweet'
+      },
+      lemon: { color: 'yellow', taste: 'sour' }
+    },
+    vegetables: {
+      carrot: { color: 'orange', taste: 'sweet' },
+      broccoli: {
+        color: 'green',
+        tastes: {
+          0: 'bitter',
+          1: 'sweet',
+          common: 'sweet'
+        }
+      }
+    },
+    nuts: {
+      0: 'chestnut',
+      5: 'walnut',
+      6: 'cashew',
+      big: 'coconut',
+      again: {
+        0: 'chestnut',
+        5: 'walnut',
+        6: 'cashew',
+        big: 'coconut'
+      }
+    }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[apple][colors][]', 'red'));
+    $form.append(create$hidden('fruit[apple][colors][]', 'green'));
+    $form.append(create$hidden('fruit[apple][colors][]', 'yellow'));
+    $form.append(create$hidden('fruit[apple][taste]', 'sweet'));
+    $form.append(create$hidden('fruit[lemon][color]', 'yellow'));
+    $form.append(create$hidden('fruit[lemon][taste]', 'sour'));
+    $form.append(create$hidden('vegetables[carrot][color]', 'orange'));
+    $form.append(create$hidden('vegetables[carrot][taste]', 'sweet'));
+    $form.append(create$hidden('vegetables[broccoli][color]', 'green'));
+    $form.append(create$hidden('vegetables[broccoli][tastes][]', 'bitter'));
+    $form.append(create$hidden('vegetables[broccoli][tastes][]', 'sweet'));
+    $form.append(create$hidden('vegetables[broccoli][tastes][common]', 'sweet'));
+    $form.append(create$hidden('nuts[]', 'chestnut'));
+    $form.append(create$hidden('nuts[5]', 'walnut'));
+    $form.append(create$hidden('nuts[]', 'cashew'));
+    $form.append(create$hidden('nuts[big]', 'coconut'));
+    $form.append(create$hidden('nuts[again][]', 'chestnut'));
+    $form.append(create$hidden('nuts[again][5]', 'walnut'));
+    $form.append(create$hidden('nuts[again][]', 'cashew'));
+    $form.append(create$hidden('nuts[again][big]', 'coconut'));
+  }
+);
+
+/*module('Submit as JSON.');
 
 asyncTest('Empty form is submitted.', function() {
   expect(1);
@@ -30,7 +251,7 @@ asyncTest('Empty form is submitted.', function() {
     }
   });
 });
-
+*/
 /* module("Vars", {
   setup: function() {
     this.action = "dump.php"
