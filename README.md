@@ -35,7 +35,7 @@ $(function(event) {
 
 ### Server side – PHP ###
 
-Include [src/ArrayHelper.php] and [src/Form2Json.php] in your application initialization script as soon as possible. Then run its Json2Request static method.
+Include [src/ArrayHelper.php](https://github.com/Glutexo/form2json/blob/master/src/ArrayHelper.php) and [src/Form2Json.php](https://github.com/Glutexo/form2json/blob/master/src/Form2Json.php) in your application initialization script as soon as possible. Then run its _Json2Request_ static method.
 
 ```
 require('vendor/glutexo/form2json/ArrayHelper.php');
@@ -48,3 +48,7 @@ Form2Json::Json2Request();
 It is possible to change the JSON variable name. On the JavaScript side, call the _submitFormAsJson_ function like `Form2Json.submitFormAsJson(formElement, '_MyJsonVar_');`. On the PHP side, call the Json2Request method like `Form2Json::Json2Request('_MyJsonVar_');`.
 
 If you want to leave the JSON variable in the super-globals ($_GET, $_POST and $_REQUEST) after unpacking, provide the Json2Request method with the second argument being false: `Form2Json::Json2Request('__JSON', false);`.
+
+## Note ##
+
+If decimal numbers are used as array keys, the result of _getFormData_ will be different from what will be stored in the PHP variables. This is because PHP converts such array keys from floats to integers. This can solved by patching the _getFormData_ to translate the numeric array keys the same way as PHP does. I just didn’t do it (yet), since it is a very unlikely situation.
