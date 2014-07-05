@@ -70,9 +70,16 @@ function getFormData(form) {
   return paramObj;
 }
 
-function getFormDataJson(form) {
+function getFormDataJson(form, jsonVar) {
+  if(jsonVar == undefined) {
+    jsonVar = '__JSON';
+  }
+
   var formData = getFormData(form);
-  return { __JSON: JSON.stringify(formData) };
+  var packedFormData = {}
+  packedFormData[jsonVar] = JSON.stringify(formData);
+
+  return packedFormData;
 }
 
 function getPushKey(obj) {

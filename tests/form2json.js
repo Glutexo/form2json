@@ -1,3 +1,15 @@
+/**
+ * Creates a jQuery object with a form element. The formTransform function
+ * argument can be used to fill the form with input fields.
+ *
+ * Example: create$form(function($form) {
+ *   $hidden = create$hidden('fruit', 'apple');
+ *   $form.append($hidden);
+ * });
+ *
+ * @param formTransform
+ * @returns {*|jQuery|HTMLElement}
+ */
 function create$form(formTransform) {
   $form = $(document.createElement('form'));
   $form.attr('action', 'dump.php');
@@ -10,6 +22,13 @@ function create$form(formTransform) {
   return $form;
 }
 
+/**
+ * Creates a jQuery object with a hidden form field.
+ *
+ * @param name
+ * @param value
+ * @returns {*|jQuery|HTMLElement}
+ */
 function create$hidden(name, value) {
   var $input =  $(document.createElement('input'));
   $input.attr('name', name);
@@ -17,49 +36,105 @@ function create$hidden(name, value) {
   return $input;
 }
 
+/**
+ * Performs an AJAX request as if the given form was submitted.
+ * Options:
+ *   callback: Function run on success. Goes into success option of
+ *             the performed $.ajax call.
+ *   jsonVar: If given, all form data is packed into a single JSON-
+ *            -encoded variable.
+ *
+ * @param form
+ * @param options
+ */
+function ajaxSendForm(form, options) {
+  var $form = form instanceof jQuery ? form : $(form);
+  var options = $.extend({}, ajaxSendForm.defaults, options);
 
+  $.ajax({
+    url: $form.attr('action'),
+    type: $form.attr('method'),
+    success: options.callback,
+    data: options.json ? getFormDataJson($form) : getFormData($form)
+  });
+}
+ajaxSendForm.defaults = {
+  json: false,
+  callback: undefined
+};
 
-function formAsyncTest(title, expected, formTransform) {
+/**
+ * Performs an asyncTest sending a form via AJAX to the dump
+ * script that returns a JSON object with all request variables.
+ * It compares the send data with the received data, which
+ * must be equal.
+ * If the json switch is on, all the form data is sent packed
+ * into a single json variable named __JSON.
+ *
+ * @param title
+ * @param expected
+ * @param formTransform
+ * @param json
+ */
+function formAsyncTest(title, expected, formTransform, json) {
+  var suffix = 'AJAX';
+  if(json) {
+    suffix += ', JSON';
+  }
+  suffix = ' (' + suffix + ')';
+
+  asyncTest(title + suffix, function() {
+    expect(1);
+
+    var $form = create$form(formTransform);
+    var callback = function(data) {
+      deepEqual(data, expected);
+      start();
+    };
+
+    ajaxSendForm($form, {
+      callback: callback,
+      json: json
+    });
+  });
+}
+
+/**
+ * Runs a series of tests to check whether the form data
+ * is collected, send and unpacked correctly.
+ *
+ * Firstly, the expected argument is compared to a result
+ * of a getFormData call on the formTransform form. This
+ * tests the getFormData function.
+ *
+ * Secondly, the form is sent via AJAX to a dump script
+ * that returns a JSON object just with all the request
+ * parameters it gets. This tests that the form is sent
+ * correctly as well as dumped correctly.
+ *
+ * Thirdly, the form is sent to the dump script again,
+ * but this time with all its data packed into a single
+ * JSON variable. This tests the transparent JSON
+ * unpacking on the server side.
+ *
+ * @param title
+ * @param expected
+ * @param formTransform
+ */
+function formAsyncTests(title, expected, formTransform) {
   test(title + ' (getFormData)', function() {
     var $form = create$form(formTransform);
 
     deepEqual(getFormData($form), expected);
   });
 
-  asyncTest(title + ' (AJAX)', function() {
-    expect(1);
-
-    var $form = create$form(formTransform);
-
-    $.ajax({
-      url: $form.attr('action'),
-      type: $form.attr('method'),
-      data: getFormData($form),
-      success: function(data) {
-        deepEqual(data, expected);
-        start();
-      }
-    });
-  });
-
-  asyncTest(title + ' (AJAX, JSON)', function() {
-    expect(1);
-
-    var $form = create$form(formTransform);
-    var formData = getFormData($form);
-
-    $.ajax({
-      url: $form.attr('action'),
-      type: $form.attr('method'),
-      data: { __JSON: JSON.stringify(formData) },
-      success: function(data) {
-        deepEqual(data, expected);
-        start();
-      }
-    });
-  });
+  formAsyncTest(title, expected, formTransform, false);
+  formAsyncTest(title, expected, formTransform, true);
 }
 
+/* *** *** HELPER FUNCTIONS END HERE *** *** */
+
+/* *** *** TESTS START HERE *** *** */
 module('getPushKey helper');
 
 test('Empty object push key is found', function() {
@@ -89,9 +164,9 @@ test('Another push key in named object is found', function() {
 
 module('Form submit environment');
 
-formAsyncTest('Empty form is submitted.', {});
+formAsyncTests('Empty form is submitted.', {});
 
-formAsyncTest(
+formAsyncTests(
   'Form with single value is submitted.',
   { fruit: 'apple' },
   function($form) {
@@ -99,7 +174,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with multiple values is submitted.',
   { fruit: 'apple', vegetable: 'carrot', nut: 'cashew' },
   function($form) {
@@ -109,7 +184,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with named arrays is submitted.',
   {
     fruit: { red: 'apple', orange: 'orange' },
@@ -123,7 +198,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with numbered arrays is submitted.',
   {
     fruit: { 0: 'apple', 2: 'orange' },
@@ -137,7 +212,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with one implicitly numbered array is submitted.',
   {
     fruit: { 0: 'apple', 1: 'orange', 2: 'pear' }
@@ -149,7 +224,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with more implicitly numbered arrays is submitted.',
   {
     fruit: { 0: 'apple', 1: 'orange' },
@@ -166,7 +241,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with multi-dimensional named arrays is submitted.',
   {
     fruit: {
@@ -190,7 +265,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with multi-dimensional mixed arrays is submitted.',
   {
     fruit: {
@@ -252,7 +327,7 @@ formAsyncTest(
   }
 );
 
-formAsyncTest(
+formAsyncTests(
   'Form with multi-dimensional implicit arrays is submitted.',
   {
     fruit: {
@@ -281,221 +356,3 @@ formAsyncTest(
     $form.append(create$hidden('vegetables[carrot][][]', 'brown and rotten'));
   }
 );
-/*
-module('Submit as JSON.');
-
-jsonFormAsyncTest('Empty form is submitted.', {});
-
- module("Vars", {
-  setup: function() {
-    this.action = "dump.php"
-  }
-});
-
-test('Plain vars are captured.', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="fruit" value="apple" />\n'
-  html += '   <input type="hidden" name="vegetable" value="carrot" />\n'
-  html += '   <input type="hidden" name="unknown" value="watermelon" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  $form.attr('action', this.action);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    fruit: 'apple',
-    vegetable: 'carrot',
-    unknown: 'watermelon'
-  });
-
-  $.ajax({
-    url: $form.attr('action'),
-    type: 'POST',
-    data: formData,
-    success: function(data) {
-    }
-  });
-});
-
-test('Empty vars are captured.', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="nothing" value="" />\n'
-  html += '   <input type="hidden" name="nihilism" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    nothing: '',
-    nihilism: ''
-  });
-});
-
-test('Vars with a same name are overwritten.', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="fruit" value="apple" />\n'
-  html += '   <input type="hidden" name="vegetable" value="carrot" />\n'
-  html += '   <input type="hidden" name="fruit" value="pear" />\n'
-  html += '   <input type="hidden" name="vegetable" value="broccoli" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    fruit: 'pear',
-    vegetable: 'broccoli'
-  });
-});
-
-test('One-dimensional hashes are captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="food[fruit]" value="apple" />\n'
-  html += '   <input type="hidden" name="food[vegetable]" value="carrot" />\n'
-  html += '   <input type="hidden" name="animal[mammal]" value="rat" />\n'
-  html += '   <input type="hidden" name="animal[bird]" value="blackbird" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    food: {
-      fruit: 'apple',
-      vegetable: 'carrot'
-    },
-    animal: {
-      mammal: 'rat',
-      bird: 'blackbird'
-    }
-  });
-});
-
-test('Multi-dimensional hashes are captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="food[fruit][apple]" value="red" />\n'
-  html += '   <input type="hidden" name="food[fruit][pear]" value="yellow" />\n'
-  html += '   <input type="hidden" name="food[vegetable][carrot]" value="orange" />\n'
-  html += '   <input type="hidden" name="food[vegetable][broccoli]" value="green" />\n'
-  html += '   <input type="hidden" name="animal[mammal][rat]" value="brown" />\n'
-  html += '   <input type="hidden" name="animal[mammal][elephant]" value="grey" />\n'
-  html += '   <input type="hidden" name="animal[bird][blackbird]" value="black" />\n'
-  html += '   <input type="hidden" name="animal[bird][dove]" value="white" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    food: {
-      fruit: {
-        apple: 'red',
-        pear: 'yellow'
-      },
-      vegetable: {
-        carrot: 'orange',
-        broccoli: 'green'
-      }
-    },
-    animal: {
-      mammal: {
-        rat: 'brown',
-        elephant: 'grey'
-      },
-      bird: {
-        blackbird: 'black',
-        dove: 'white'
-      }
-    }
-  });
-});
-
-
-test('One array with one element is captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="fruit[]" value="apple" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    fruit: ['apple']
-  });
-});
-
-test('One array with more elements is captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="fruit[]" value="apple" />\n'
-  html += '   <input type="hidden" name="fruit[]" value="pear" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    fruit: ['apple', 'pear']
-  });
-});
-
-test('Arrays are captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="fruit[]" value="apple" />\n'
-  html += '   <input type="hidden" name="fruit[]" value="pear" />\n'
-  html += '   <input type="hidden" name="vegetable[]" value="carrot" />\n'
-  html += '   <input type="hidden" name="vegetable[]" value="broccoli" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    fruit: ['apple', 'pear'],
-    vegetable: ['carrot', 'broccoli']
-  });
-});
-
-test('Hash with array is captured', function() {
-  var html = '<form>\n';
-  html += '   <input type="hidden" name="food[fruit][]" value="apple" />\n'
-  html += '   <input type="hidden" name="food[fruit][]" value="pear" />\n'
-  html += '</form>\n';
-
-  var $form = $(html);
-  var formData = getFormData($form);
-
-  deepEqual(formData, {
-    food: {
-      fruit: ['apple', 'pear']
-    }
-  });
-});
-
-test('Hashes with arrays are captured', function() {
- var html = '<form>\n';
- html += '   <input type="hidden" name="food[fruit][]" value="apple" />\n'
- html += '   <input type="hidden" name="food[fruit][]" value="pear" />\n'
- html += '   <input type="hidden" name="food[vegetable][]" value="carrot" />\n'
- html += '   <input type="hidden" name="food[vegetable][]" value="broccoli" />\n'
- html += '   <input type="hidden" name="animal[mammal][]" value="rat" />\n'
- html += '   <input type="hidden" name="animal[mammal][]" value="elephant" />\n'
- html += '   <input type="hidden" name="animal[bird][]" value="blackbird" />\n'
- html += '   <input type="hidden" name="animal[bird][]" value="dove" />\n'
- html += '</form>\n';
-
- var $form = $(html);
- var formData = getFormData($form);
-
- deepEqual(formData, {
- food: {
- fruit: ['apple', 'pear'],
- vegetable: ['carrot', 'broccoli']
- },
- animal: {
- mammal: ['rat', 'elephant'],
- bird: ['blackbird', 'dove']
- }
- });
- }); */
