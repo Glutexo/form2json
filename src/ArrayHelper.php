@@ -2,10 +2,9 @@
 class ArrayHelper {
 	/**
 	 * @param $std
-	 * @param bool $integer_keys If true, integer keys are casted as integers. If false, they are left as strings.
 	 * @return array
 	 */
-	static function StdClassToArrayRecursive(stdClass $std, $integer_keys = true) {
+	static function StdClassToArrayRecursive(stdClass $std) {
 		// Because of a bug in PHP #66137 (https://bugs.php.net/bug.php?id=66173),
 		// it’s not possible to use the converted array directly. A new array must
 		// be created, because if the stdClass object contains properties with nu-
