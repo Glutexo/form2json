@@ -55,7 +55,7 @@ function ajaxSendForm(form, options) {
     url: $form.attr('action'),
     type: $form.attr('method'),
     success: options.callback,
-    data: options.json ? getFormDataJson($form) : getFormData($form)
+    data: options.json ? Form2Json.getFormDataJson($form) : Form2Json.getFormData($form)
   });
 }
 ajaxSendForm.defaults = {
@@ -125,7 +125,7 @@ function formAsyncTests(title, expected, formTransform) {
   test(title + ' (getFormData)', function() {
     var $form = create$form(formTransform);
 
-    deepEqual(getFormData($form), expected);
+    deepEqual(Form2Json.getFormData($form), expected);
   });
 
   formAsyncTest(title, expected, formTransform, false);
@@ -139,27 +139,27 @@ module('getPushKey helper');
 
 test('Empty object push key is found', function() {
   var obj = {};
-  equal(getPushKey(obj), 0);
+  equal(Form2Json.getPushKey(obj), 0);
 });
 
 test('Sequential numeric push key is found', function() {
   var obj = { 0: 'fruit', 1: 'vegetable' };
-  equal(getPushKey(obj), 2);
+  equal(Form2Json.getPushKey(obj), 2);
 });
 
 test('Non-sequential numeric push key is found', function() {
   var obj = { 0: 'fruit', 5: 'vegetable', 2: 'nut' };
-  equal(getPushKey(obj), 6);
+  equal(Form2Json.getPushKey(obj), 6);
 });
 
 test('First push key in named object is found', function() {
   var obj = { fruit: 'apple' };
-  equal(getPushKey(obj), 0);
+  equal(Form2Json.getPushKey(obj), 0);
 });
 
 test('Another push key in named object is found', function() {
   var obj = { fruit: 'apple', 5: 'vegetable', nut: 'chestnut', 2: 'unknown' };
-  equal(getPushKey(obj), 6);
+  equal(Form2Json.getPushKey(obj), 6);
 });
 
 module('Form submit environment');

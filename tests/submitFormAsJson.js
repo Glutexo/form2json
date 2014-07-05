@@ -4,7 +4,7 @@ $(function(event) {
   function send_json_click(event) {
     event.preventDefault();
 
-    submitFormAsJson($form);
+    Form2Json.submitFormAsJson($form);
   }
 
   $form.on('click', 'input[name=send_json]', send_json_click);
