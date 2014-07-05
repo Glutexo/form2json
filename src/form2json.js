@@ -1,5 +1,6 @@
 // Based on a code by Pointy presented at http://stackoverflow.com/a/2403206/1307676
 // Creates an object with form data.
+// TODO: Convert float keys to integers.
 function getFormData(form) {
   var paramObj = {};
   var serialized = $(form).serializeArray();

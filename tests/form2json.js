@@ -171,7 +171,6 @@ formAsyncTest(
   }
 );
 
-
 formAsyncTest(
   'Form with multi-dimensional mixed arrays is submitted.',
   {
@@ -231,6 +230,36 @@ formAsyncTest(
     $form.append(create$hidden('nuts[again][5]', 'walnut'));
     $form.append(create$hidden('nuts[again][]', 'cashew'));
     $form.append(create$hidden('nuts[again][big]', 'coconut'));
+  }
+);
+
+formAsyncTest(
+  'Form with multi-dimensional implicit arrays is submitted.',
+  {
+    fruit: {
+      0: {
+        0: 'red apple'
+      },
+      1: {
+        0: 'yellow lemon'
+      }
+    },
+    vegetables: {
+      carrot: {
+        0: {
+          0: 'orange and sweet'
+        },
+        1: {
+          0: 'brown and rotten'
+        }
+      }
+    }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[][]', 'red apple'));
+    $form.append(create$hidden('fruit[][]', 'yellow lemon'));
+    $form.append(create$hidden('vegetables[carrot][][]', 'orange and sweet'));
+    $form.append(create$hidden('vegetables[carrot][][]', 'brown and rotten'));
   }
 );
 
