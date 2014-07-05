@@ -17,12 +17,14 @@ function create$hidden(name, value) {
   return $input;
 }
 
+
+
 function formAsyncTest(title, expected, formTransform) {
   test(title + ' (getFormData)', function() {
     var $form = create$form(formTransform);
 
     deepEqual(getFormData($form), expected);
-  })
+  });
 
   asyncTest(title + ' (AJAX)', function() {
     expect(1);
@@ -33,6 +35,23 @@ function formAsyncTest(title, expected, formTransform) {
       url: $form.attr('action'),
       type: $form.attr('method'),
       data: getFormData($form),
+      success: function(data) {
+        deepEqual(data, expected);
+        start();
+      }
+    });
+  });
+
+  asyncTest(title + ' (AJAX, JSON)', function() {
+    expect(1);
+
+    var $form = create$form(formTransform);
+    var formData = getFormData($form);
+
+    $.ajax({
+      url: $form.attr('action'),
+      type: $form.attr('method'),
+      data: { __JSON: JSON.stringify(formData) },
       success: function(data) {
         deepEqual(data, expected);
         start();
@@ -121,7 +140,7 @@ formAsyncTest(
 formAsyncTest(
   'Form with one implicitly numbered array is submitted.',
   {
-    fruit: { 0: 'apple', 1: 'orange', 2: 'pear' },
+    fruit: { 0: 'apple', 1: 'orange', 2: 'pear' }
   },
   function($form) {
     $form.append(create$hidden('fruit[]', 'apple'));
@@ -262,26 +281,12 @@ formAsyncTest(
     $form.append(create$hidden('vegetables[carrot][][]', 'brown and rotten'));
   }
 );
+/*
+module('Submit as JSON.');
 
-/*module('Submit as JSON.');
+jsonFormAsyncTest('Empty form is submitted.', {});
 
-asyncTest('Empty form is submitted.', function() {
-  expect(1);
-
-  var $form = create$form();
-
-  $.ajax({
-    url: $form.attr('action'),
-    type: $form.attr('method'),
-    data: getFormDataJson($form),
-    success: function(data) {
-      deepEqual(data, {});
-      start();
-    }
-  });
-});
-*/
-/* module("Vars", {
+ module("Vars", {
   setup: function() {
     this.action = "dump.php"
   }
