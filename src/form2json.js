@@ -2,8 +2,10 @@
 // Creates an object with form data.
 // TODO: Convert float keys to integers.
 function getFormData(form) {
+  var $form = form instanceof jQuery ? form : $(form);
+
   var paramObj = {};
-  var serialized = $(form).serializeArray();
+  var serialized = $form.serializeArray();
 
   // serialized is an array of simple objects. These objects have
   // attributes name and value as they are in the html attributes
@@ -92,4 +94,31 @@ function getPushKey(obj) {
   });
 
   return highest == undefined ? 0 : highest + 1;
+}
+
+function submitFormAsJson(originalForm, jsonVar) {
+  if(jsonVar == undefined) {
+    jsonVar = '__JSON';
+  }
+
+  var originalFormAttributes;
+  if(originalForm instanceof jQuery) {
+    originalFormAttributes = originalForm[0].attributes;
+  } else {
+    originalFormAttributes = originalForm.attributes;
+  }
+
+  var $jsonForm = $(document.createElement('form'));
+  for(var i = 0, length = originalFormAttributes.length; i < length; i++){
+    var attribute = originalFormAttributes.item(i)
+    $jsonForm.attr(attribute.nodeName, attribute.nodeValue);
+  }
+
+  var $hidden = $(document.createElement('input'));
+  $hidden.attr('type', 'hidden');
+  $hidden.attr('name', jsonVar);
+  $hidden.val(JSON.stringify(getFormData(originalForm)));
+  $jsonForm.append($hidden);
+
+  $jsonForm.trigger('submit');
 }
