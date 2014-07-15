@@ -55,7 +55,7 @@ function ajaxSendForm(form, options) {
     url: $form.attr('action'),
     type: $form.attr('method'),
     success: options.callback,
-    data: options.json ? Form2Json.getFormDataJson($form) : Form2Json.getFormData($form)
+    data: options.json ? Form2Json._getFormDataJson($form) : Form2Json._getFormData($form)
   });
 }
 ajaxSendForm.defaults = {
@@ -104,8 +104,8 @@ function formAsyncTest(title, expected, formTransform, json) {
  * is collected, send and unpacked correctly.
  *
  * Firstly, the expected argument is compared to a result
- * of a getFormData call on the formTransform form. This
- * tests the getFormData function.
+ * of a _getFormData call on the formTransform form. This
+ * tests the _getFormData function.
  *
  * Secondly, the form is sent via AJAX to a dump script
  * that returns a JSON object just with all the request
@@ -122,10 +122,10 @@ function formAsyncTest(title, expected, formTransform, json) {
  * @param formTransform
  */
 function formAsyncTests(title, expected, formTransform) {
-  test(title + ' (getFormData)', function() {
+  test(title + ' (_getFormData)', function() {
     var $form = create$form(formTransform);
 
-    deepEqual(Form2Json.getFormData($form), expected);
+    deepEqual(Form2Json._getFormData($form), expected);
   });
 
   formAsyncTest(title, expected, formTransform, false);
@@ -135,34 +135,34 @@ function formAsyncTests(title, expected, formTransform) {
 /* *** *** HELPER FUNCTIONS END HERE *** *** */
 
 /* *** *** TESTS START HERE *** *** */
-module('getPushKey helper');
+module('_getPushKey');
 
 test('Empty object push key is found', function() {
   var obj = {};
-  equal(Form2Json.getPushKey(obj), 0);
+  equal(Form2Json._getPushKey(obj), 0);
 });
 
 test('Sequential numeric push key is found', function() {
   var obj = { 0: 'fruit', 1: 'vegetable' };
-  equal(Form2Json.getPushKey(obj), 2);
+  equal(Form2Json._getPushKey(obj), 2);
 });
 
 test('Non-sequential numeric push key is found', function() {
   var obj = { 0: 'fruit', 5: 'vegetable', 2: 'nut' };
-  equal(Form2Json.getPushKey(obj), 6);
+  equal(Form2Json._getPushKey(obj), 6);
 });
 
 test('First push key in named object is found', function() {
   var obj = { fruit: 'apple' };
-  equal(Form2Json.getPushKey(obj), 0);
+  equal(Form2Json._getPushKey(obj), 0);
 });
 
 test('Another push key in named object is found', function() {
   var obj = { fruit: 'apple', 5: 'vegetable', nut: 'chestnut', 2: 'unknown' };
-  equal(Form2Json.getPushKey(obj), 6);
+  equal(Form2Json._getPushKey(obj), 6);
 });
 
-module('Form submit environment');
+module('_getFormData');
 
 formAsyncTests('Empty form is submitted.', {});
 
