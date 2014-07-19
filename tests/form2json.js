@@ -475,3 +475,73 @@ test('Non-empty form is cloned as empty.', function() {
   notEqual(form, clonedForm);
   deepEqual(form, clonedForm);
 });
+
+module('_afterInvisible');
+
+test('Element not in DOM raises an error.', function() {
+  var before = document.createElement('form');
+  var after = document.createElement('form');
+
+  throws(function() {
+    Form2Json._afterInvisible(before, after);
+  }, 'Element is not in the document’s <body>.');
+});
+
+test('Element not in body raises an error.', function() {
+  var before = document.createElement('form');
+  $('head').append(before);
+  var after = document.createElement('form');
+
+  throws(function() {
+    Form2Json._afterInvisible(before, after);
+  }, 'Element is not in the document’s <body>.');
+});
+
+test('The new element is inserted after the original one.', function() {
+  var $body = $('body');
+  var before = document.createElement('form');
+  $body.append(before);
+  var after = document.createElement('form');
+
+  Form2Json._afterInvisible(before, after);
+
+  strictEqual($(before).next()[0], after);
+
+  // Teardown.
+  $(before).add(after).remove();
+});
+
+test('The new element is invisible.', function() {
+  var $body = $('body');
+  var before = document.createElement('form');
+  $body.append(before);
+  var after = document.createElement('form');
+
+  Form2Json._afterInvisible(before, after);
+  console.log($(after)[0].style.display);
+
+  equal($(before).filter(':visible').length, 1);
+  equal($(after).filter(':visible').length, 0);
+
+  // Teardown.
+  $(before).add(after).remove();
+});
+
+/*module('submitFormAsJson');
+
+asyncTest('Form is submitted.', function() {
+  expect(0);
+
+  var $form = create$form(function($form) {
+    $form.append(create$hidden('fruit', 'apple'));
+    $form.append(create$hidden('vegetable', 'carrot'));
+  });
+
+  $(window).on('submit', 'form', function(event) {
+    event.preventDefault();
+
+    start();
+  });
+
+  Form2Json.submitFormAsJson({ form: $form[0] });
+});*/

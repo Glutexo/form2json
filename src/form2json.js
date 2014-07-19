@@ -10,6 +10,7 @@
       var options = $.extend({}, Form2Json.submitFormAsJson.defaults, callOptions);
 
       var originalForm = Form2Json._getFormFromOptions(options);
+      var $originalForm = $(originalForm);
 
 /*      var submittedBySubmitButton = options.event != undefined && options.event.target.tagName == 'INPUT' && options.event.target.type.toLowerCase() == 'submit';
       if(submittedBySubmitButton) {
@@ -27,6 +28,14 @@
       } */
 
       var jsonForm = Form2Json._cloneForm(originalForm);
+      try {
+        // If the original form is in the DOM, attach the
+        // new one too, so it can be interceptable.
+        Form2Json._afterInvisible(originalForm, jsonForm);
+      } catch(error) {
+        // Nothing, not attaching after is ok too.
+      }
+
       var jsonHidden = Form2Json._createHidden(options.varName, JSON.stringify(formData));
       $(jsonForm)
         .append(jsonHidden)
@@ -230,6 +239,23 @@
       hidden.name = name;
       hidden.value = value;
       return hidden;
+    },
+
+    /**
+     * Adds an alement right after another and makes
+     * it invisible.
+     *
+     * @param before
+     * @param after
+     * @private
+     */
+    _afterInvisible: function(before, after) {
+      var $before = $(before);
+      if(!$before.parents('body').length) {
+        throw 'Element is not in the document’s <body>.'
+      }
+      $before.after(after);
+      after.style.display = 'none';
     }
   }
 
