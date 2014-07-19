@@ -181,10 +181,10 @@
           throw '\'form\' or \'event\' option must be defined.';
         }
 
-        if(event.target.tagName == 'FORM') {
-          form = event.target;
+        if(options.event.target.tagName == 'FORM') {
+          form = options.event.target;
         } else {
-          form = $(event.target).parents('form')[0];
+          form = $(options.event.target).parents('form')[0];
         }
       }
       return form;

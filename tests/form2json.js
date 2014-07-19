@@ -356,3 +356,66 @@ formAsyncTests(
     $form.append(create$hidden('vegetables[carrot][][]', 'brown and rotten'));
   }
 );
+
+module('_getFormFromOptions');
+
+test('Form got when directly supplied.', function() {
+  var form = document.createElement('form');
+
+  var options = { form: form };
+  strictEqual(form, Form2Json._getFormFromOptions(options));
+});
+
+asyncTest('Form got from the directly supplied key even if event with another form is supplied too.', function() {
+  expect(3);
+
+  var form = document.createElement('form');
+  var anotherForm = document.createElement('form');
+  notEqual(form, anotherForm);
+
+  $(anotherForm).on('submit', function(event) {
+    event.preventDefault();
+
+    var options = {
+      form: form,
+      event: event
+    };
+
+    var gotForm = Form2Json._getFormFromOptions(options);
+
+    strictEqual(form, gotForm);
+    notEqual(anotherForm, gotForm); // notStrictEqual would do too
+    start();
+  }).trigger('submit');
+});
+
+asyncTest('Form got from submit event.', function() {
+  expect(1);
+
+  var form = document.createElement('form');
+
+  $(form).on('submit', function(event) {
+    event.preventDefault();
+
+    var options = { event: event };
+    strictEqual(form, Form2Json._getFormFromOptions(options));
+    start();
+  }).trigger('submit');
+});
+
+asyncTest('Form got from button click event.', function() {
+  expect(1);
+
+  var form = document.createElement('form');
+  var button = document.createElement('input');
+  button.type = 'submit';
+  $(form).append(button);
+
+  $(button).on('click', function(event) {
+    event.preventDefault();
+
+    var options = { event: event };
+    strictEqual(form, Form2Json._getFormFromOptions(options));
+    start();
+  }).trigger('click');
+});
