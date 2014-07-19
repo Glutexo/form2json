@@ -10,7 +10,6 @@
       var options = $.extend({}, Form2Json.submitFormAsJson.defaults, callOptions);
 
       var originalForm = Form2Json._getFormFromOptions(options);
-      var $originalForm = $(originalForm);
 
 /*      var submittedBySubmitButton = options.event != undefined && options.event.target.tagName == 'INPUT' && options.event.target.type.toLowerCase() == 'submit';
       if(submittedBySubmitButton) {
@@ -31,7 +30,7 @@
       try {
         // If the original form is in the DOM, attach the
         // new one too, so it can be interceptable.
-        Form2Json._afterInvisible(originalForm, jsonForm);
+        Form2Json._afterInvisible(originalForm, jsonForm, 'form2json');
       } catch(error) {
         // Nothing, not attaching after is ok too.
       }
@@ -39,7 +38,8 @@
       var jsonHidden = Form2Json._createHidden(options.varName, JSON.stringify(formData));
       $(jsonForm)
         .append(jsonHidden)
-        .trigger('submit');
+        .trigger('submit')
+        .remove();
     },
 
     /**
@@ -249,13 +249,14 @@
      * @param after
      * @private
      */
-    _afterInvisible: function(before, after) {
+    _afterInvisible: function(before, after, className) {
       var $before = $(before);
       if(!$before.parents('body').length) {
         throw 'Element is not in the document’s <body>.'
       }
       $before.after(after);
       after.style.display = 'none';
+      after.className = className;
     }
   }
 

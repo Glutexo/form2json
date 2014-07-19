@@ -11,7 +11,7 @@
  * @returns {*|jQuery|HTMLElement}
  */
 function create$form(formTransform) {
-  $form = $(document.createElement('form'));
+  var $form = $(document.createElement('form'));
   $form.attr('action', 'dump.php');
   $form.attr('method', 'POST');
 
@@ -527,21 +527,77 @@ test('The new element is invisible.', function() {
   $(before).add(after).remove();
 });
 
-/*module('submitFormAsJson');
+module('submitFormAsJson');
 
-asyncTest('Form is submitted.', function() {
-  expect(0);
+function submitFormAsJsonTest(name, expectCount, modifyOptions, callback) {
+  asyncTest(name, function() {
+    expect(expectCount);
 
-  var $form = create$form(function($form) {
-    $form.append(create$hidden('fruit', 'apple'));
-    $form.append(create$hidden('vegetable', 'carrot'));
+    var submit = function(event) {
+      event.preventDefault();
+      callback.call(this, event);
+      start();
+    };
+
+    // Attaching to a body for the cloned form to has interceptable submit event.
+    var $body = $('body');
+    var $form = create$form(function($form) {
+      $form.append(create$hidden('fruit', 'apple'));
+      $form.append(create$hidden('vegetable', 'carrot'));
+    });
+    $body.append($form);
+
+    $body.on('submit', 'form.form2json', submit);
+
+    var options = { form: $form[0] };
+    modifyOptions(options);
+
+    Form2Json.submitFormAsJson(options);
+
+    // Teardown.
+    $form.remove();
+    $body.off('submit', 'form.form2json', submit);
   });
+}
 
-  $(window).on('submit', 'form', function(event) {
-    event.preventDefault();
+submitFormAsJsonTest(
+  'Form is submitted with right values.',
+  2,
+  function(options) {},
+  function(event) {
+    var val = $(this).find('input').val();
+    var data = {
+      fruit: 'apple',
+      vegetable: 'carrot'
+    };
 
-    start();
-  });
+    equal(val, JSON.stringify(data));
+    deepEqual(JSON.parse(val), data);
+  }
+);
 
-  Form2Json.submitFormAsJson({ form: $form[0] });
-});*/
+submitFormAsJsonTest(
+  'Form is packed into a field with a default name.',
+  2,
+  function(options) {},
+  function(event) {
+    var $input = $(this).find('input');
+
+    equal($input.length, 1);
+    equal($input.attr('name'), Form2Json.submitFormAsJson.defaults.varName);
+  }
+);
+
+submitFormAsJsonTest(
+  'Form can be packed into a field with a custom name.',
+  2,
+  function(options) {
+    options.varName = '_JSON_'
+  },
+  function(event) {
+    var $input = $(this).find('input');
+
+    equal($input.length, 1);
+    equal($input.attr('name'), '_JSON_');
+  }
+);
