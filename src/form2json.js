@@ -33,7 +33,15 @@
         .trigger('submit');
     },
 
-    // TODO: Fill in comment.
+    /**
+     * Finds the highest numeric key and returns the next one. If the
+     * object has no numeric keys, 0 is returned. This mimics PHP’s
+     * array[] operator.
+     *
+     * @param obj
+     * @returns {number}
+     * @private
+     */
     _getPushKey: function(obj) {
       var highest;
       $.each(obj, function(k, v) {
@@ -46,10 +54,19 @@
       return highest == undefined ? 0 : highest + 1;
     },
 
-    // TODO: Fill in comment.
+    /**
+     * Gets data from a given form using .getFormData and packs them
+     * into a single field containing a stringified JSON object of a
+     * given name.
+     *
+     * @param form
+     * @param jsonVar
+     * @returns {object}
+     * @private
+     */
     _getFormDataJson: function(form, jsonVar) {
       if(jsonVar == undefined) {
-        jsonVar = '__JSON';
+        jsonVar = Form2Json.submitFormAsJson.defaults.varName;
       }
 
       var formData = Form2Json._getFormData(form);
@@ -59,9 +76,21 @@
       return packedFormData;
     },
 
-    // Based on a code by Pointy at http://stackoverflow.com/a/2403206/1307676
-    // Creates an object with form data.
-    // TODO: Convert float keys to integers.
+    /**
+     * Gets data from the given form as an object with keys being
+     * field names and values their values. It tries to mimic the
+     * way how PHP handles arrays/hashes. Arrays are treated as
+     * objects with numeric keys. String keys containing integers
+     * are converted to integers.
+     *
+     * Based on a code by Pointy at http://stackoverflow.com/a/2403206/1307676
+     *
+     * TODO: Convert float keys to integers.
+     *
+     * @param form
+     * @returns {object}
+     * @private
+     */
     _getFormData: function(form) {
       var $form = form instanceof jQuery ? form : $(form);
 
