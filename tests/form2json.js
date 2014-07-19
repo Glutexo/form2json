@@ -419,3 +419,59 @@ asyncTest('Form got from button click event.', function() {
     start();
   }).trigger('click');
 });
+
+module('_cloneForm');
+
+test('Plain empty form is cloned.', function() {
+  var form = document.createElement('form');
+  var clonedForm = Form2Json._cloneForm(form);
+
+  notEqual(form, clonedForm);
+  deepEqual(form, clonedForm);
+});
+
+test('Simple empty form is cloned.', function() {
+  var form = document.createElement('form');
+  form.action = 'http://www.example.com/form?action=submmit#hash';
+  form.method = 'POST';
+  form.enctype = 'multipart/form-data';
+  var clonedForm = Form2Json._cloneForm(form);
+
+  notEqual(form, clonedForm);
+  deepEqual(form, clonedForm);
+});
+
+test('Non-empty form is cloned as empty.', function() {
+  var form = document.createElement('form');
+  form.action = 'http://www.example.com/form?action=submmit#hash';
+  form.method = 'POST';
+  form.enctype = 'multipart/form-data';
+  var $form = $(form);
+
+  var input = document.createElement('input');
+  var $input = $(input);
+  $(form).append(input);
+
+  var clonedForm = Form2Json._cloneForm(form);
+  var $clonedForm = $(clonedForm);
+
+  // There really is the input element.
+  equal($form.find('input').length, 1);
+
+  // The new form is empty, the old one isn’t.
+  notEqual(form, clonedForm);
+  notDeepEqual(form, clonedForm);
+
+  equal($clonedForm.find('input').length, 0);
+
+  // Remove the input element from the old form to check
+  // deep equality.
+  $input.remove();
+  // It is really removed.
+  equal($form.find('input').length, 0);
+
+  // Both forms are now empty – they are not identical,
+  // but they have same attributes.
+  notEqual(form, clonedForm);
+  deepEqual(form, clonedForm);
+});
