@@ -268,7 +268,7 @@
 
   $.fn.extend({
     form2json: function() {
-      
+      return this;
     }
   });
 })(jQuery);

@@ -604,6 +604,22 @@ submitFormAsJsonTest(
 
 module('jQuery');
 
-test('jQuery object has form2json method callable on collection.',function() {
+test('jQuery object has form2json method callable on collection.', function() {
+  var $form = create$form();
+  equal('function', typeof $form.form2json);
+});
+
+test('jQuery form2json method returns the collection (allows chaining).', function() {
+  var $form = create$form();
+  strictEqual($form, $form.form2json());
+});
+
+asyncTest('Form has its submit method intercepted.', function() {
+  expect(1);
+  var $form = create$form().form2json();
+  $form.on('submit', function(event) { event.preventDefault(); });
+  $form.trigger('submit');
+//  $form.form2json();
   equal('function', typeof $('form').form2json);
+  start();
 });
