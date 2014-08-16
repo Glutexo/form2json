@@ -631,21 +631,6 @@ test('jQuery form2json method returns the collection (allows chaining).', functi
   strictEqual($form, $form.form2json());
 });
 
-test('jQuery form2json method hooks the form2json.onSubmit method.', function() {
-  var $form = create$form().form2json();
-  var events = jQuery._data($form[0], 'events');
-
-  // The form can have many attached submit events. Check that
-  // the onSubmit is among them exactly once.
-  var equal = 0;
-  $.each(events.submit, function() {
-    if(this.handler === Form2Json.onSubmit) {
-      equal++;
-    }
-  })
-  strictEqual(1, equal);
-});
-
 // If the submit isn’t intercepted, the page would be redirected.
 // Is it sufficent to test nothing assuming that if we are still
 // here seeing the test results, it means that the tess passed?
@@ -653,7 +638,19 @@ test('jQuery form2json method hooks the form2json.onSubmit method.', function() 
 // its submitment intercepted?
 asyncTest('Form has its submit method intercepted.', function() {
   expect(1);
-  var $form = create$form().form2json();
+
+  var options = {
+    callback: function() {
+      $(this).on('submit', function(event) {
+        // Intercepting the original form isn’t enough. Even though
+        // this callback call isn’t covered by this test, it has to
+        // be used to prevent redirect.
+        event.preventDefault();
+      });
+    }
+  };
+
+  var $form = create$form().form2json(options);
   $form.on('submit', function(event) {
     // Don’t prevent default here! It’s form2json’s job.
     equal(true, event.isDefaultPrevented());
@@ -670,6 +667,10 @@ asyncTest('The submitFormAsJson method is called, callback being handled.', func
       $(this).on('submit', function(event) {
         event.preventDefault();
         // Test just the call itself.
+        // Almost identical to the last test, but this time this callback
+        // right before submitting the JSON form is tested. Thanks to the
+        // last test it can be already assumed that the submitment of the
+        // original form is intercepted.
         start();
       });
     }
