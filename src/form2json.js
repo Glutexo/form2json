@@ -1,4 +1,4 @@
-(function() {
+(function($) {
   Form2Json = {
     /**
      * Submits a form, but all its values are packed into a single field
@@ -265,4 +265,10 @@
     event: undefined,
     varName: '__JSON'
   };
-})();
+
+  $.fn.extend({
+    form2json: function() {
+      
+    }
+  });
+})(jQuery);

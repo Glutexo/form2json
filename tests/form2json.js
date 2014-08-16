@@ -601,3 +601,9 @@ submitFormAsJsonTest(
     equal($input.attr('name'), '_JSON_');
   }
 );
+
+module('jQuery');
+
+test('jQuery object has form2json method callable on collection.',function() {
+  equal('function', typeof $('form').form2json);
+});
