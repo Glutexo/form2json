@@ -535,7 +535,9 @@ function submitFormAsJsonTest(name, expectCount, modifyOptions, callback) {
 
     var submit = function(event) {
       event.preventDefault();
-      callback.call(this, event);
+      if(typeof callback == 'function') {
+        callback.call(this, event);
+      }
       start();
     };
 
@@ -602,6 +604,21 @@ submitFormAsJsonTest(
   }
 );
 
+submitFormAsJsonTest(
+  'Callback is called right before submit in the context of the form.',
+  2,
+  function(options) {
+    options.callback = function() {
+      var $input = $(this).find('input');
+
+      // The hidden fields is there with the right name.
+      // The form is ready to be submitted.
+      equal(1, $input.length);
+      equal(Form2Json.submitFormAsJson.defaults.varName, $input.attr('name'));
+    }
+  }
+);
+
 module('jQuery');
 
 test('jQuery object has form2json method callable on collection.', function() {
@@ -614,12 +631,34 @@ test('jQuery form2json method returns the collection (allows chaining).', functi
   strictEqual($form, $form.form2json());
 });
 
+test('jQuery form2json method hooks the form2json.onSubmit method.', function() {
+  var $form = create$form().form2json();
+  var events = jQuery._data($form[0], 'events');
+
+  // The form can have many attached submit events. Check that
+  // the onSubmit is among them exactly once.
+  var equal = 0;
+  $.each(events.submit, function() {
+    if(this.handler === Form2Json.onSubmit) {
+      equal++;
+    }
+  })
+  strictEqual(1, equal);
+});
+
+// If the submit isn’t intercepted, the page would be redirected.
+// Is it sufficent to test nothing assuming that if we are still
+// here seeing the test results, it means that the tess passed?
+// Is there a way to test whether a form has been submitted and
+// its submitment intercepted?
 asyncTest('Form has its submit method intercepted.', function() {
   expect(1);
   var $form = create$form().form2json();
-  $form.on('submit', function(event) { event.preventDefault(); });
+  $form.on('submit', function(event) {
+    // Don’t prevent default here! It’s form2json’s job.
+    equal(true, event.isDefaultPrevented());
+    start();
+  });
   $form.trigger('submit');
-//  $form.form2json();
-  equal('function', typeof $('form').form2json);
-  start();
 });
+

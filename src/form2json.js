@@ -36,9 +36,17 @@
       }
 
       var jsonHidden = Form2Json._createHidden(options.varName, JSON.stringify(formData));
-      $(jsonForm)
-        .append(jsonHidden)
-        .trigger('submit')
+      var $jsonForm = $(jsonForm);
+      $jsonForm.append(jsonHidden);
+
+      // Perform the callback before submitting. This can be used e.g. for
+      // performing an AJAX request without need to bind 'submit' event
+      // using .on() on the form’s parent.
+      if(typeof options.callback == 'function') {
+        options.callback.call(jsonForm);
+      }
+
+      $jsonForm.trigger('submit')
         .remove();
     },
 
@@ -257,17 +265,24 @@
       $before.after(after);
       after.style.display = 'none';
       after.className = className;
+    },
+
+    onSubmit: function(event) {
+      event.preventDefault();
     }
   }
 
   Form2Json.submitFormAsJson.defaults = {
     form: undefined,
     event: undefined,
-    varName: '__JSON'
+    varName: '__JSON',
+    callback: undefined
   };
 
   $.fn.extend({
     form2json: function() {
+      this.on('submit', Form2Json.onSubmit);
+
       return this;
     }
   });
