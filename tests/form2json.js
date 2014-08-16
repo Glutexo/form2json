@@ -662,3 +662,19 @@ asyncTest('Form has its submit method intercepted.', function() {
   $form.trigger('submit');
 });
 
+asyncTest('The submitFormAsJson method is called, callback being handled.', function() {
+  expect(0);
+
+  var options = {
+    callback: function() {
+      $(this).on('submit', function(event) {
+        event.preventDefault();
+        // Test just the call itself.
+        start();
+      });
+    }
+  };
+  var $form = create$form().form2json(options);
+  $form.trigger('submit');
+});
+

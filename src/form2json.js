@@ -265,10 +265,6 @@
       $before.after(after);
       after.style.display = 'none';
       after.className = className;
-    },
-
-    onSubmit: function(event) {
-      event.preventDefault();
     }
   }
 
@@ -280,8 +276,17 @@
   };
 
   $.fn.extend({
-    form2json: function() {
-      this.on('submit', Form2Json.onSubmit);
+    form2json: function(callOptions) {
+      // When the variable’s name is “options”, it is not
+      // accesible in the submit function. Why?
+      var submit = function(event) {
+        event.preventDefault();
+        var defaultOptions = { event: event };
+        var options = $.extend({}, defaultOptions, callOptions);
+        Form2Json.submitFormAsJson(options);
+      };
+
+      this.on('submit', submit);
 
       return this;
     }
