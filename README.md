@@ -52,3 +52,10 @@ If you want to leave the JSON variable in the super-globals ($_GET, $_POST and $
 ## Note ##
 
 If decimal numbers are used as array keys, the result of _getFormData_ will be different from what will be stored in the PHP variables. This is because PHP converts such array keys from floats to integers. This can solved by patching the _getFormData_ to translate the numeric array keys the same way as PHP does. I just didn’t do it (yet), since it is a very unlikely situation.
+
+## TODO / next steps: ##
+
+* Test hooking the submit method.
+* Move the Form2json object from window to jQuery.
+* Add a method to unbind the event.
+* Possibly done.

@@ -518,7 +518,6 @@ test('The new element is invisible.', function() {
   var after = document.createElement('form');
 
   Form2Json._afterInvisible(before, after);
-  console.log($(after)[0].style.display);
 
   equal($(before).filter(':visible').length, 1);
   equal($(after).filter(':visible').length, 0);
@@ -657,6 +656,17 @@ asyncTest('Form has its submit method intercepted.', function() {
     start();
   });
   $form.trigger('submit');
+});
+
+test('The OnSubmit method is attached to the form submit event.', function() {
+  expect(1);
+  var $form = create$form().form2json();
+  var events = $._data($form[0], 'events').submit;
+  $.each(events, function() {
+    if(typeof this.handler.origin == 'function' && this.handler.origin === Form2Json.onSubmit) {
+      ok(true);
+    }
+  })
 });
 
 asyncTest('The submitFormAsJson method is called, callback being handled.', function() {

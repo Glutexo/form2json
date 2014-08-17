@@ -265,6 +265,19 @@
       $before.after(after);
       after.style.display = 'none';
       after.className = className;
+    },
+
+    onSubmit: function(callOptions) {
+      var callback = function(event) {
+        event.preventDefault();
+        var defaultOptions = { event: event };
+        var options = $.extend({}, defaultOptions, callOptions);
+        Form2Json.submitFormAsJson(options);
+      };
+
+      // Thanks to this, it is testable where the function came from.
+      callback.origin = Form2Json.onSubmit;
+      return callback;
     }
   }
 
@@ -279,13 +292,7 @@
     form2json: function(callOptions) {
       // When the variable’s name is “options”, it is not
       // accesible in the submit function. Why?
-      var submit = function(event) {
-        event.preventDefault();
-        var defaultOptions = { event: event };
-        var options = $.extend({}, defaultOptions, callOptions);
-        Form2Json.submitFormAsJson(options);
-      };
-
+      var submit = Form2Json.onSubmit(callOptions);
       this.on('submit', submit);
 
       return this;
