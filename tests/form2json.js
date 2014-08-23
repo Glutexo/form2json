@@ -695,7 +695,7 @@ test('The OnSubmit method is attached to the form submit event.', function() {
   var $form = create$form().form2json();
   var events = $._data($form[0], 'events').submit;
   $.each(events, function() {
-    if(typeof this.handler.origin != 'undefined' && this.handler.origin === Form2Json.onSubmit) {
+    if(typeof this.handler.origin != 'undefined' && this.handler.origin === Form2Json.eventHandler) {
       ok(true);
     }
   })
@@ -721,7 +721,7 @@ asyncTest('The submitFormAsJson method is called, callback being handled.', func
   $form.trigger('submit');
 });
 
-/*
+
 asyncTest('Button clicking adds its value to the form data.', function() {
   expect(1);
 
@@ -737,13 +737,17 @@ asyncTest('Button clicking adds its value to the form data.', function() {
   }
 
   var options = {
-    callback: function() {
+    callback: function(formData) {
       var $form = $(this);
       $form.on('submit', function(event) {
         event.preventDefault();
 
-        var $input = $form.find('input');
-        deepEqual($input,);
+        var expected = {
+          fruit: 'apple',
+          vegetable: 'carrot',
+          button: 'clicked'
+        };
+        deepEqual(expected, formData);
         start();
       });
     }
@@ -752,4 +756,4 @@ asyncTest('Button clicking adds its value to the form data.', function() {
   var $form = create$form(formTransform).form2json(options);
   $form.find('input[type=submit]').trigger('click');
 });
-*/
+

@@ -11,20 +11,21 @@
 
       var originalForm = Form2Json._getFormFromOptions(options);
 
-/*      var submittedBySubmitButton = options.event != undefined && options.event.target.tagName == 'INPUT' && options.event.target.type.toLowerCase() == 'submit';
+      // TODO: Another ways to submit a form? Possibly another button types?
+      var submittedBySubmitButton = options.event != undefined && options.event.target.tagName == 'INPUT' && options.event.target.type.toLowerCase() == 'submit';
       if(submittedBySubmitButton) {
         var $inputHidden = $(document.createElement('input'));
         $inputHidden.attr('type', 'hidden');
         $inputHidden.attr('name', options.event.target.name);
         $inputHidden.val(options.event.target.value);
         $(originalForm).append($inputHidden);
-      } */
+      }
 
       var formData = Form2Json._getFormData(originalForm);
 
-/*      if(submittedBySubmitButton) {
+      if(submittedBySubmitButton) {
         $inputHidden.remove();
-      } */
+      }
 
       var jsonForm = Form2Json._cloneForm(originalForm);
       try {
@@ -32,7 +33,7 @@
         // new one too, so it can be interceptable.
         Form2Json._afterInvisible(originalForm, jsonForm, 'form2json');
       } catch(error) {
-        // Nothing, not attaching after is ok too.
+        // Nothing, not attaching is ok too.
       }
 
       var jsonHidden = Form2Json._createHidden(options.varName, JSON.stringify(formData));
@@ -267,7 +268,7 @@
       after.className = className;
     },
 
-    onSubmit: function(callOptions) {
+    eventHandler: function(callOptions) {
       var callback = function(event) {
         event.preventDefault();
         var defaultOptions = { event: event };
@@ -276,7 +277,7 @@
       };
 
       // Thanks to this, it is testable where the function came from.
-      callback.origin = Form2Json.onSubmit;
+      callback.origin = Form2Json.eventHandler;
       return callback;
     }
   }
@@ -292,8 +293,11 @@
     form2json: function(callOptions) {
       // When the variable’s name is “options”, it is not
       // accesible in the submit function. Why?
-      var submit = Form2Json.onSubmit(callOptions);
-      this.on('submit', submit);
+      var submit = Form2Json.eventHandler(callOptions);
+      // TODO: Another ways to submit a form? Possibly another button types?
+      this
+        .on('submit', submit)
+        .on('click', 'input[type=submit]', submit);
 
       return this;
     }
