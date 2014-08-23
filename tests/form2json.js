@@ -535,16 +535,17 @@ function submitFormAsJsonTest(testOptions) {
     // Attaching to a body for the cloned form to has interceptable submit event.
     var $body = $('body');
     var $form = create$form(function($form) {
-      $form.append(create$hidden('fruit', 'apple'));
-      $form.append(create$hidden('vegetable', 'carrot'));
+      $.each(submitFormAsJsonTest.formData, function(k, v) {
+        $form.append(create$hidden(k, v));
+      });
     });
     $body.append($form);
 
-    var callback = function() {
+    var callback = function(formData) {
       $(this).on('submit', function(event) {
         event.preventDefault();
         if(typeof testOptions.callback == 'function') {
-          testOptions.callback.call(this, event);
+          testOptions.callback.call(this, event, formData);
         }
         start();
       });
@@ -554,8 +555,8 @@ function submitFormAsJsonTest(testOptions) {
       form: $form[0],
       callback: callback
     };
-    if(typeof testOptions.modifyOptions == 'function') {
-      testOptions.modifyOptions.call($form[0], options);
+    if(typeof testOptions.prepare == 'function') {
+      testOptions.prepare.call($form[0], options);
     }
 
     Form2Json.submitFormAsJson(options);
@@ -564,6 +565,10 @@ function submitFormAsJsonTest(testOptions) {
     $form.remove();
   });
 }
+submitFormAsJsonTest.formData = {
+  fruit: 'apple',
+  vegetable: 'carrot'
+};
 
 submitFormAsJsonTest({
   testName: 'Form is submitted with right values.',
@@ -594,8 +599,8 @@ submitFormAsJsonTest({
 submitFormAsJsonTest({
   testName: 'Form can be packed into a field with a custom name.',
   expectCount: 2,
-  modifyOptions: function(options) {
-    options.varName = '_JSON_'
+  prepare: function(options) {
+    options.varName = '_JSON_';
   },
   callback: function(event) {
     var $input = $(this).find('input');
@@ -618,9 +623,32 @@ submitFormAsJsonTest({
   }
 });
 
-/*submitFormAsJsonTest(
-  'Button clicking'
-);*/
+submitFormAsJsonTest({
+  testName: 'Button clicking sends its value along the form data.',
+  expectCount: 1,
+  prepare: function(options) {
+    options.form = undefined;
+
+    var $submit = $(document.createElement('input'));
+    $submit
+      .attr('type', 'submit')
+      .attr('name', 'button')
+      .val('clicked')
+      .on('click', function(event) {
+        event.preventDefault();
+        options.event = event;
+      });
+
+    $(this).append($submit);
+    $submit.trigger('click');
+  },
+  callback: function(event, formData) {
+    var expected = $.extend({}, submitFormAsJsonTest.formData, {
+      button: 'clicked'
+    });
+    deepEqual(expected, formData);
+  }
+});
 
 module('jQuery');
 
