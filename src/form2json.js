@@ -43,7 +43,7 @@
       // performing an AJAX request without need to bind 'submit' event
       // using .on() on the form’s parent.
       if(typeof options.callback == 'function') {
-        options.callback.call(jsonForm);
+        options.callback.call(jsonForm, formData);
       }
 
       $jsonForm.trigger('submit')

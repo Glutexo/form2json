@@ -528,17 +528,9 @@ test('The new element is invisible.', function() {
 
 module('submitFormAsJson');
 
-function submitFormAsJsonTest(name, expectCount, modifyOptions, callback) {
-  asyncTest(name, function() {
-    expect(expectCount);
-
-    var submit = function(event) {
-      event.preventDefault();
-      if(typeof callback == 'function') {
-        callback.call(this, event);
-      }
-      start();
-    };
+function submitFormAsJsonTest(testOptions) {
+  asyncTest(testOptions.testName, function() {
+    expect(testOptions.expectCount);
 
     // Attaching to a body for the cloned form to has interceptable submit event.
     var $body = $('body');
@@ -548,24 +540,35 @@ function submitFormAsJsonTest(name, expectCount, modifyOptions, callback) {
     });
     $body.append($form);
 
-    $body.on('submit', 'form.form2json', submit);
+    var callback = function() {
+      $(this).on('submit', function(event) {
+        event.preventDefault();
+        if(typeof testOptions.callback == 'function') {
+          testOptions.callback.call(this, event);
+        }
+        start();
+      });
+    };
 
-    var options = { form: $form[0] };
-    modifyOptions(options);
+    var options = {
+      form: $form[0],
+      callback: callback
+    };
+    if(typeof testOptions.modifyOptions == 'function') {
+      testOptions.modifyOptions.call($form[0], options);
+    }
 
     Form2Json.submitFormAsJson(options);
 
     // Teardown.
     $form.remove();
-    $body.off('submit', 'form.form2json', submit);
   });
 }
 
-submitFormAsJsonTest(
-  'Form is submitted with right values.',
-  2,
-  function(options) {},
-  function(event) {
+submitFormAsJsonTest({
+  testName: 'Form is submitted with right values.',
+  expectCount: 2,
+  callback: function(event) {
     var val = $(this).find('input').val();
     var data = {
       fruit: 'apple',
@@ -575,48 +578,49 @@ submitFormAsJsonTest(
     equal(val, JSON.stringify(data));
     deepEqual(JSON.parse(val), data);
   }
-);
+});
 
-submitFormAsJsonTest(
-  'Form is packed into a field with a default name.',
-  2,
-  function(options) {},
-  function(event) {
+submitFormAsJsonTest({
+  testName: 'Form is packed into a field with a default name.',
+  expectCount: 2,
+  callback: function(event) {
     var $input = $(this).find('input');
 
     equal($input.length, 1);
     equal($input.attr('name'), Form2Json.submitFormAsJson.defaults.varName);
   }
-);
+});
 
-submitFormAsJsonTest(
-  'Form can be packed into a field with a custom name.',
-  2,
-  function(options) {
+submitFormAsJsonTest({
+  testName: 'Form can be packed into a field with a custom name.',
+  expectCount: 2,
+  modifyOptions: function(options) {
     options.varName = '_JSON_'
   },
-  function(event) {
+  callback: function(event) {
     var $input = $(this).find('input');
 
     equal($input.length, 1);
     equal($input.attr('name'), '_JSON_');
   }
-);
+});
 
-submitFormAsJsonTest(
-  'Callback is called right before submit in the context of the form.',
-  2,
-  function(options) {
-    options.callback = function() {
-      var $input = $(this).find('input');
+submitFormAsJsonTest({
+  testName: 'Callback is called right before submit in the context of the form.',
+  expectCount: 2,
+  callback: function() {
+    var $input = $(this).find('input');
 
-      // The hidden fields is there with the right name.
-      // The form is ready to be submitted.
-      equal(1, $input.length);
-      equal(Form2Json.submitFormAsJson.defaults.varName, $input.attr('name'));
-    }
+    // The hidden fields is there with the right name.
+    // The form is ready to be submitted.
+    equal(1, $input.length);
+    equal(Form2Json.submitFormAsJson.defaults.varName, $input.attr('name'));
   }
-);
+});
+
+/*submitFormAsJsonTest(
+  'Button clicking'
+);*/
 
 module('jQuery');
 
@@ -663,7 +667,7 @@ test('The OnSubmit method is attached to the form submit event.', function() {
   var $form = create$form().form2json();
   var events = $._data($form[0], 'events').submit;
   $.each(events, function() {
-    if(typeof this.handler.origin == 'function' && this.handler.origin === Form2Json.onSubmit) {
+    if(typeof this.handler.origin != 'undefined' && this.handler.origin === Form2Json.onSubmit) {
       ok(true);
     }
   })
@@ -689,3 +693,35 @@ asyncTest('The submitFormAsJson method is called, callback being handled.', func
   $form.trigger('submit');
 });
 
+/*
+asyncTest('Button clicking adds its value to the form data.', function() {
+  expect(1);
+
+  function formTransform($form) {
+    $form.append(create$hidden('fruit', 'apple'));
+    $form.append(create$hidden('vegetable', 'carrot'));
+
+    var submit = document.createElement('input');
+    submit.type = 'submit';
+    submit.name = 'button';
+    submit.value = 'clicked';
+    $form.append(submit);
+  }
+
+  var options = {
+    callback: function() {
+      var $form = $(this);
+      $form.on('submit', function(event) {
+        event.preventDefault();
+
+        var $input = $form.find('input');
+        deepEqual($input,);
+        start();
+      });
+    }
+  };
+
+  var $form = create$form(formTransform).form2json(options);
+  $form.find('input[type=submit]').trigger('click');
+});
+*/
