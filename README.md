@@ -22,14 +22,11 @@ Include jQuery and [src/form2json.js] in your HTML file.
 <script src="js/form2json.js" type="text/javascript"></script>
 ```
 
-Override your form’s submit event to use the submitFormAsJson function:
+Hook form2json onto your form for it to be sent as JSON.
 
 ```js
 $(function(event) {
-  $('#my_form').on('submit', function(event) {
-    event.preventDefault();
-    Form2Json.submitFormAsJson(this);
-  });
+  $('#my_form').form2json();
 });
 ```
 
@@ -45,9 +42,11 @@ Form2Json::Json2Request();
 
 ### Configuration ###
 
-It is possible to change the JSON variable name. On the JavaScript side, call the _submitFormAsJson_ function like `Form2Json.submitFormAsJson(formElement, '_MyJsonVar_');`. On the PHP side, call the Json2Request method like `Form2Json::Json2Request('_MyJsonVar_');`.
+It is possible to change the JSON variable name. On the JavaScript side, provide a _varName_ option like `$('#my_form').form2json({ varName: '_MyJsonVar_' });`. On the PHP side, call the Json2Request method like `Form2Json::Json2Request('_MyJsonVar_');`.
 
-If you want to leave the JSON variable in the super-globals ($_GET, $_POST and $_REQUEST) after unpacking, provide the Json2Request method with the second argument being false: `Form2Json::Json2Request('__JSON', false);`.
+A callback can be run right before submitting the JSON form. Use a `callback` option like `$('#my_form').form2json({ callback: function(formData) { /* this = form element */ } });`. `this` points to the DOM object of the cloned form that has only one field with the serialized JSON object.
+
+If you want to leave the JSON variable in the super-globals (_$_GET_, _$_POST_ and _$_REQUEST_) after unpacking, provide the Json2Request method with a second argument being false: `Form2Json::Json2Request('__JSON', false);`.
 
 ## Note ##
 
@@ -55,7 +54,7 @@ If decimal numbers are used as array keys, the result of _getFormData_ will be d
 
 ## TODO / next steps: ##
 
-* Test hooking the submit method.
 * Move the Form2json object from window to jQuery.
 * Add a method to unbind the event.
-* Possibly done.
+* Intercept other submit buttons than `<input type="submit" />`
+* Fix form data collection when floats are used as array keys.
