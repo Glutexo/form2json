@@ -228,6 +228,18 @@ class ArrayHelperTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals($expected, $ary);
 	}
 
+	public function testOneDimensionalDecimalNumberedStdClassCanBeConverted() {
+		$obj = new stdClass;
+		$obj->{'0.123'} = 'mammal';
+		$obj->{'1.333'} = 'bird';
+		$obj->{'2.0'} = 'reptile';
+		$ary = ArrayHelper::StdClassToArrayRecursive($obj);
+
+		$expected = ['0.123' => 'mammal', '1.333' => 'bird', '2.0' => 'reptile'];
+
+		$this->assertEquals($expected, $ary);
+	}
+
 	public function testMultiDimensionalNamedStdClassCanBeConverted() {
 		$obj = new stdClass;
 		$obj->mammals = new stdClass;

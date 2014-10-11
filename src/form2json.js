@@ -103,8 +103,6 @@
      *
      * Based on a code by Pointy at http://stackoverflow.com/a/2403206/1307676
      *
-     * TODO: Convert float keys to integers.
-     *
      * @param form
      * @returns {object}
      * @private
