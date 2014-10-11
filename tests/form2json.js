@@ -213,6 +213,20 @@ formAsyncTests(
 );
 
 formAsyncTests(
+  'Form with decimal numbered arrays is submitted.',
+  {
+    fruit: { 0.1: 'apple', 2.23: 'orange' },
+    vegetables: { 1.333: 'broccoli', 3.6: 'carrot' }
+  },
+  function($form) {
+    $form.append(create$hidden('fruit[0.1]', 'apple'));
+    $form.append(create$hidden('fruit[2.23]', 'orange'));
+    $form.append(create$hidden('vegetables[3.6]', 'carrot'));
+    $form.append(create$hidden('vegetables[1.333]', 'broccoli'));
+  }
+);
+
+formAsyncTests(
   'Form with one implicitly numbered array is submitted.',
   {
     fruit: { 0: 'apple', 1: 'orange', 2: 'pear' }

@@ -57,4 +57,3 @@ If decimal numbers are used as array keys, the result of _getFormData_ will be d
 * Move the Form2json object from window to jQuery.
 * Add a method to unbind the event.
 * Intercept other submit buttons than `<input type="submit" />`
-* Fix form data collection when floats are used as array keys.
